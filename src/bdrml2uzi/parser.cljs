@@ -8,17 +8,22 @@
 (def grammar
   {:start (pp/end :model)
    :model (pp/plus (pp/or :behaviors :data-structures :relations))
-   :behaviors (trim-seq "B" "=" "{" (pp/separated-by :behavior-name (pp/trim ",")) "}")
-   :behavior-name :identifier
+   :behaviors (trim-seq "B" "=" "{" (pp/separated-by :identifier (pp/trim ",")) "}")
    :data-structures (trim-seq (pp/or "De" "Di") "=" "{"
                               (pp/separated-by :data-def (pp/trim ","))
                               "}")
    :data-def [:identifier (pp/trim ":") (pp/plus pp/letter)]
-   :relations (pp/or :transition :read)
-   :transition (trim-seq "trans" "(" :behavior-name "," :behavior-name ")" ":"
+   :relations (pp/or :transition :read :write :receive :send :copy :update)
+   :transition (trim-seq "trans" "(" :identifier "," :identifier ")" ":"
                          "{" :conditions "}")
-   :read (trim-seq "read" "(" :behavior-name "," :behavior-name ")" ":"
+   :read (trim-seq "read" "(" :identifier "," :identifier ")" ":"
                          "{" :conditions "}")
+   :write (trim-seq "write" "(" :value ":" :identifier "," :identifier ")" ":"
+                    "{" :conditions "}")
+   :receive "TODO"
+   :send "TODO"
+   :copy "TODO"
+   :update "TODO"
    :conditions (pp/separated-by (pp/or :always-cond :boolean-cond :textual-cond
                                        :existence-cond :non-existence-cond)
                                 (pp/trim ","))
@@ -27,6 +32,7 @@
    :textual-cond (trim-seq "\"" :identifier "\"")
    :existence-cond (trim-seq "∃" :identifier)
    :non-existence-cond (trim-seq "∄" :identifier)
+   :value (pp/flatten (pp/plus (pp/negate ":")))
    :identifier (pp/flatten (pp/plus (pp/or pp/word pp/space)))})
 
 (def transformations
@@ -47,12 +53,16 @@
    :read (fn [[_ _ data _ behavior _ _ _ conditions _]]
            {:type :read, :data data, :behavior behavior,
             :conditions conditions})
+   :write (fn [[_ _ value _ data _ behavior _ _ _ conditions _]]
+           {:type :write, :data data, :behavior behavior,
+            :value value, :conditions conditions})
    :conditions (fn [conditions] (vec (take-nth 2 conditions)))
    :always-cond (constantly {:type :always})
    :boolean-cond (fn [p] {:type :boolean, :predicate p})
    :textual-cond (fn [[_ text _]] {:type :textual, :text text})
    :existence-cond (fn [[_ data]] {:type :existence, :data data})
    :non-existence-cond (fn [[_ data]] {:type :non-existence, :data data})
+   :value str/trim
    :identifier str/trim})
 
 (def parser (pp/compose grammar transformations))
@@ -60,6 +70,15 @@
 (defn parse [src] (pp/parse parser src))
 
 (comment
+
+  (pp/parse (pp/flatten (pp/plus (pp/negate ",")))
+            "ac,bd,")
+
+ (pp/parse (pp/negate ",")
+           ",a")
+
+ *e
+
   (set! *print-length* 100)
   (take-nth 2 (range 0 10))
   (pp/parse parser "")
@@ -79,6 +98,12 @@ B={Avanzar, Buscar, Retroceder}
                                {:b 2})
               {:a 3})
  *e
+
+ (pp/parse (-> parser :parsers :value)
+           ":asdf")
+
+  (pp/parse (-> parser :parsers :write)
+            "write ( a : a , b ) : {*} ")
 
  (merge-with into
              {:a 1 :b 2}
