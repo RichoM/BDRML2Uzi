@@ -14,20 +14,20 @@
                               "}")
    :data-def [:identifier (pp/trim ":") (pp/plus pp/letter)]
    :relations (pp/or :transition :read :write :receive :send :copy :update)
-   :transition (trim-seq "trans" "(" :identifier "," :identifier ")" ":"
-                         "{" :conditions "}")
-   :read (trim-seq "read" "(" :identifier "," :identifier ")" ":"
-                         "{" :conditions "}")
-   :write (trim-seq "write" "(" (pp/optional (trim-seq :value ":")) :identifier "," :identifier ")" ":"
-                    "{" :conditions "}")
-   :receive (trim-seq "receive" "(" :identifier "," :identifier ")" ":"
-                   "{" :conditions "}")
-   :send (trim-seq "send" "(" (pp/optional (trim-seq :value ":")) :identifier "," :identifier ")" ":"
-                    "{" :conditions "}")
-   :copy (trim-seq "copy" "(" :identifier "," :identifier ")" ":"
-                   "{" :conditions "}")
-   :update (trim-seq "update" "(" (pp/optional (trim-seq :value ":")) :identifier ")" ":"
-                    "{" :conditions "}")
+   :transition (trim-seq "trans" "(" :identifier "," :identifier ")"
+                         (pp/optional (trim-seq ":" "{" :conditions "}")))
+   :read (trim-seq "read" "(" :identifier "," :identifier ")"
+                   (pp/optional (trim-seq ":" "{" :conditions "}")))
+   :write (trim-seq "write" "(" (pp/optional (trim-seq :value ":")) :identifier "," :identifier ")"
+                    (pp/optional (trim-seq ":" "{" :conditions "}")))
+   :receive (trim-seq "receive" "(" :identifier "," :identifier ")"
+                      (pp/optional (trim-seq ":" "{" :conditions "}")))
+   :send (trim-seq "send" "(" (pp/optional (trim-seq :value ":")) :identifier "," :identifier ")"
+                   (pp/optional (trim-seq ":" "{" :conditions "}")))
+   :copy (trim-seq "copy" "(" :identifier "," :identifier ")"
+                   (pp/optional (trim-seq ":" "{" :conditions "}")))
+   :update (trim-seq "update" "(" (pp/optional (trim-seq :value ":")) :identifier ")"
+                     (pp/optional (trim-seq ":" "{" :conditions "}")))
    :conditions (pp/separated-by (pp/or :always-cond :boolean-cond :textual-cond
                                        :existence-cond :non-existence-cond)
                                 (pp/trim ","))
@@ -52,25 +52,25 @@
                          "Di" :internal-data)
                        (vec (take-nth 2 data))})
    :relations (fn [rel] {:relations [rel]})
-   :transition (fn [[_ _ from _ to _ _ _ conditions _]]
+   :transition (fn [[_ _ from _ to _ [_ _ conditions _]]]
                  {:type :transition, :from from, :to to,
                   :conditions conditions})
-   :read (fn [[_ _ data _ behavior _ _ _ conditions _]]
+   :read (fn [[_ _ data _ behavior _ [_ _ conditions _]]]
            {:type :read, :data data, :behavior behavior,
             :conditions conditions})
-   :write (fn [[_ _ [value _] data _ behavior _ _ _ conditions _]]
+   :write (fn [[_ _ [value _] data _ behavior _ [_ _ conditions _]]]
            {:type :write, :data data, :behavior behavior,
             :value value, :conditions conditions})
-   :receive (fn [[_ _ data _ behavior _ _ _ conditions _]]
+   :receive (fn [[_ _ data _ behavior _ [_ _ conditions _]]]
            {:type :receive, :data data, :behavior behavior,
             :conditions conditions})
-   :send (fn [[_ _ [value _] data _ behavior _ _ _ conditions _]]
+   :send (fn [[_ _ [value _] data _ behavior _ [_ _ conditions _]]]
            {:type :send, :data data, :behavior behavior,
             :value value, :conditions conditions})
-   :copy (fn [[_ _ from _ to _ _ _ conditions _]]
+   :copy (fn [[_ _ from _ to _ [_ _ conditions _]]]
            {:type :copy, :from from, :to to,
             :conditions conditions})
-   :update (fn [[_ _ [value _] data  _ _ _ conditions _]]
+   :update (fn [[_ _ [value _] data  _ [_ _ conditions _]]]
            {:type :update, :data data,
             :value value, :conditions conditions})
    :conditions (fn [conditions] (vec (take-nth 2 conditions)))

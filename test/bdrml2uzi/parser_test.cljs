@@ -44,7 +44,10 @@
                                     {:type :existence, :data "Bar"}
                                     {:type :boolean, :predicate "Baz"}
                                     {:type :textual, :text "Wow"}]}]}
-         (p/parse "trans( A,B ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+         (p/parse "trans( A,B ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}")))
+  (is (= {:relations [{:type :transition, :from "A", :to "B"
+                       :conditions nil}]}
+         (p/parse "trans( A,B ) "))))
 
 (deftest reads
   (is (= {:relations [{:type :read, :data "counter", :behavior "Work",
@@ -70,7 +73,10 @@
                                     {:type :existence, :data "Bar"}
                                     {:type :boolean, :predicate "Baz"}
                                     {:type :textual, :text "Wow"}]}]}
-         (p/parse "read( counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+         (p/parse "read( counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}")))
+  (is (= {:relations [{:type :read, :data "counter", :behavior "Work",
+                       :conditions nil}]}
+         (p/parse "read( counter,Work )"))))
 
 (deftest writes-without-data
   (is (= {:relations [{:type :write, :data "counter", :behavior "Work",
@@ -103,7 +109,11 @@
                                     {:type :existence, :data "Bar"}
                                     {:type :boolean, :predicate "Baz"}
                                     {:type :textual, :text "Wow"}]}]}
-         (p/parse "write( counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+         (p/parse "write( counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}")))
+  (is (= {:relations [{:type :write, :data "counter", :behavior "Work",
+                       :value nil,
+                       :conditions nil}]}
+         (p/parse "write( counter,Work )"))))
 
 (deftest writes-with-data
   (is (= {:relations [{:type :write, :data "counter", :behavior "Work",
@@ -136,7 +146,11 @@
                                     {:type :existence, :data "Bar"}
                                     {:type :boolean, :predicate "Baz"}
                                     {:type :textual, :text "Wow"}]}]}
-         (p/parse "write(-FSDFSDFSDF: counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+         (p/parse "write(-FSDFSDFSDF: counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}")))
+  (is (= {:relations [{:type :write, :data "counter", :behavior "Work",
+                       :value "-FSDFSDFSDF",
+                       :conditions nil}]}
+         (p/parse "write(-FSDFSDFSDF: counter,Work ) "))))
 
 (deftest receives
   (is (= {:relations [{:type :receive, :data "counter", :behavior "Work",
@@ -162,7 +176,10 @@
                                     {:type :existence, :data "Bar"}
                                     {:type :boolean, :predicate "Baz"}
                                     {:type :textual, :text "Wow"}]}]}
-         (p/parse "receive( counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+         (p/parse "receive( counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}")))
+  (is (= {:relations [{:type :receive, :data "counter", :behavior "Work",
+                       :conditions nil}]}
+         (p/parse "receive( counter,Work ) "))))
 
 
 (deftest sends-without-data
@@ -196,7 +213,11 @@
                                     {:type :existence, :data "Bar"}
                                     {:type :boolean, :predicate "Baz"}
                                     {:type :textual, :text "Wow"}]}]}
-         (p/parse "send( counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+         (p/parse "send( counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}")))
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value nil,
+                       :conditions nil}]}
+         (p/parse "send( counter,Work ) "))))
 
 (deftest sends-with-data
   (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
@@ -229,7 +250,11 @@
                                     {:type :existence, :data "Bar"}
                                     {:type :boolean, :predicate "Baz"}
                                     {:type :textual, :text "Wow"}]}]}
-         (p/parse "send(-FSDFSDFSDF: counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+         (p/parse "send(-FSDFSDFSDF: counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}")))
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value "-FSDFSDFSDF",
+                       :conditions nil}]}
+         (p/parse "send(-FSDFSDFSDF: counter,Work ) "))))
 
 (deftest copies
   (is (= {:relations [{:type :copy, :from "counter", :to "external counter",
@@ -255,7 +280,10 @@
                                     {:type :existence, :data "Bar"}
                                     {:type :boolean, :predicate "Baz"}
                                     {:type :textual, :text "Wow"}]}]}
-         (p/parse "copy( counter,external counter ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+         (p/parse "copy( counter,external counter ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}")))
+  (is (= {:relations [{:type :copy, :from "counter", :to "external counter",
+                       :conditions nil}]}
+         (p/parse "copy( counter,external counter ) "))))
 
 
 (deftest updates-without-data
@@ -289,7 +317,11 @@
                                     {:type :existence, :data "Bar"}
                                     {:type :boolean, :predicate "Baz"}
                                     {:type :textual, :text "Wow"}]}]}
-         (p/parse "update( counter) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+         (p/parse "update( counter) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}")))
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value nil,
+                       :conditions nil}]}
+         (p/parse "update( counter) "))))
 
 (deftest updates-with-data
   (is (= {:relations [{:type :update, :data "counter",
@@ -322,4 +354,8 @@
                                     {:type :existence, :data "Bar"}
                                     {:type :boolean, :predicate "Baz"}
                                     {:type :textual, :text "Wow"}]}]}
-         (p/parse "update(-FSDFSDFSDF: counter) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+         (p/parse "update(-FSDFSDFSDF: counter) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}")))
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value "-FSDFSDFSDF",
+                       :conditions nil}]}
+         (p/parse "update(-FSDFSDFSDF: counter) "))))
