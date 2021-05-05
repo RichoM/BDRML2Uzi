@@ -18,7 +18,7 @@
                          "{" :conditions "}")
    :read (trim-seq "read" "(" :identifier "," :identifier ")" ":"
                          "{" :conditions "}")
-   :write (trim-seq "write" "(" :value ":" :identifier "," :identifier ")" ":"
+   :write (trim-seq "write" "(" (pp/optional (trim-seq :value ":")) :identifier "," :identifier ")" ":"
                     "{" :conditions "}")
    :receive "TODO"
    :send "TODO"
@@ -32,7 +32,8 @@
    :textual-cond (trim-seq "\"" :identifier "\"")
    :existence-cond (trim-seq "∃" :identifier)
    :non-existence-cond (trim-seq "∄" :identifier)
-   :value (pp/flatten (pp/plus (pp/negate ":")))
+   :value (pp/flatten (pp/plus-greedy pp/any
+                                      (trim-seq ":" :identifier)))
    :identifier (pp/flatten (pp/plus (pp/or pp/word pp/space)))})
 
 (def transformations
@@ -53,7 +54,7 @@
    :read (fn [[_ _ data _ behavior _ _ _ conditions _]]
            {:type :read, :data data, :behavior behavior,
             :conditions conditions})
-   :write (fn [[_ _ value _ data _ behavior _ _ _ conditions _]]
+   :write (fn [[_ _ [value _] data _ behavior _ _ _ conditions _]]
            {:type :write, :data data, :behavior behavior,
             :value value, :conditions conditions})
    :conditions (fn [conditions] (vec (take-nth 2 conditions)))
@@ -103,7 +104,7 @@ B={Avanzar, Buscar, Retroceder}
            ":asdf")
 
   (pp/parse (-> parser :parsers :write)
-            "write ( a : a , b ) : {*} ")
+            "write (+1 : a , b ) : {*} ")
 
  (merge-with into
              {:a 1 :b 2}
