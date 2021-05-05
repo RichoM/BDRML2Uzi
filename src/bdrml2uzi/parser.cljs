@@ -7,17 +7,21 @@
 
 (def grammar
   {:start (pp/end :model)
-   :model (pp/plus (pp/or :behaviors :data-structures :transition))
+   :model (pp/plus (pp/or :behaviors :data-structures :relations))
    :behaviors (trim-seq "B" "=" "{" (pp/separated-by :behavior-name (pp/trim ",")) "}")
    :behavior-name :identifier
    :data-structures (trim-seq (pp/or "De" "Di") "=" "{"
                               (pp/separated-by :data-def (pp/trim ","))
                               "}")
    :data-def [:identifier (pp/trim ":") (pp/plus pp/letter)]
+   :relations (pp/or :transition :read)
    :transition (trim-seq "trans" "(" :behavior-name "," :behavior-name ")" ":"
-                         "{" (pp/separated-by :condition (pp/trim ",")) "}")
-   :condition (pp/or :always-cond :boolean-cond :textual-cond
-                     :existence-cond :non-existence-cond)
+                         "{" :conditions "}")
+   :read (trim-seq "read" "(" :behavior-name "," :behavior-name ")" ":"
+                         "{" :conditions "}")
+   :conditions (pp/separated-by (pp/or :always-cond :boolean-cond :textual-cond
+                                       :existence-cond :non-existence-cond)
+                                (pp/trim ","))
    :always-cond "*"
    :boolean-cond :identifier
    :textual-cond (trim-seq "\"" :identifier "\"")
@@ -36,9 +40,14 @@
                          "De" :external-data
                          "Di" :internal-data)
                        (vec (take-nth 2 data))})
+   :relations (fn [rel] {:relations [rel]})
    :transition (fn [[_ _ from _ to _ _ _ conditions _]]
-                 {:transitions [{:from from, :to to,
-                                 :conditions (vec (take-nth 2 conditions))}]})
+                 {:type :transition, :from from, :to to,
+                  :conditions conditions})
+   :read (fn [[_ _ data _ behavior _ _ _ conditions _]]
+           {:type :read, :data data, :behavior behavior,
+            :conditions conditions})
+   :conditions (fn [conditions] (vec (take-nth 2 conditions)))
    :always-cond (constantly {:type :always})
    :boolean-cond (fn [p] {:type :boolean, :predicate p})
    :textual-cond (fn [[_ text _]] {:type :textual, :text text})
