@@ -1,16 +1,18 @@
 (ns bdrml2uzi.parser
-  (:require [petitparser.core :as pp]))
+  (:require [petitparser.core :as pp]
+            [clojure.string :as str]))
+
+(defn trim-all [& parsers]
+  (mapv pp/trim parsers))
 
 (def grammar
   {:start (pp/end :model)
    :model (pp/plus (pp/or :behaviors :data-structures))
-   :behaviors [(pp/trim "B") (pp/trim "=") (pp/trim "{")
-               (pp/separated-by :behavior-name (pp/trim ","))
-               (pp/trim "}")]
+   :behaviors (trim-all "B" "=" "{" (pp/separated-by :behavior-name (pp/trim ",")) "}")
    :behavior-name :identifier
-   :data-structures [(pp/trim (pp/or "De" "Di")) (pp/trim "=") (pp/trim "{")
-                    (pp/separated-by :data-def (pp/trim ","))
-                    (pp/trim "}")]
+   :data-structures (trim-all (pp/or "De" "Di") "=" "{"
+                              (pp/separated-by :data-def (pp/trim ","))
+                              "}")
    :data-def [:identifier (pp/trim ":") (pp/plus pp/letter)]
    :identifier (pp/flatten (pp/plus (pp/or pp/word pp/space)))})
 
@@ -24,7 +26,8 @@
                       {(case scope
                          "De" :external-data
                          "Di" :internal-data)
-                       (vec (take-nth 2 data))})})
+                       (vec (take-nth 2 data))})
+   :identifier str/trim})
 
 (def parser (pp/compose grammar transformations))
 
@@ -35,7 +38,8 @@
   (take-nth 2 (range 0 10))
   (pp/parse parser "")
   (pp/parse parser
-            "B={Avanzar, Buscar, Retroceder}
+            "trans(Retroceder, Buscar) : {Tr elapsed}
+B={Avanzar, Buscar, Retroceder}
              Di={Oponente adelante: bool , Linea detectada : bool}
              De= {a :int, b: long}
              De= {c :int, d: long}")
