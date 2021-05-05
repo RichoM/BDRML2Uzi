@@ -20,7 +20,8 @@
                          "{" :conditions "}")
    :write (trim-seq "write" "(" (pp/optional (trim-seq :value ":")) :identifier "," :identifier ")" ":"
                     "{" :conditions "}")
-   :receive "TODO"
+   :receive (trim-seq "receive" "(" :identifier "," :identifier ")" ":"
+                   "{" :conditions "}")
    :send "TODO"
    :copy "TODO"
    :update "TODO"
@@ -57,6 +58,9 @@
    :write (fn [[_ _ [value _] data _ behavior _ _ _ conditions _]]
            {:type :write, :data data, :behavior behavior,
             :value value, :conditions conditions})
+   :receive (fn [[_ _ data _ behavior _ _ _ conditions _]]
+           {:type :receive, :data data, :behavior behavior,
+            :conditions conditions})
    :conditions (fn [conditions] (vec (take-nth 2 conditions)))
    :always-cond (constantly {:type :always})
    :boolean-cond (fn [p] {:type :boolean, :predicate p})

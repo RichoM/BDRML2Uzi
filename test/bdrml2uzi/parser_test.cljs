@@ -137,3 +137,29 @@
                                     {:type :boolean, :predicate "Baz"}
                                     {:type :textual, :text "Wow"}]}]}
          (p/parse "write(-FSDFSDFSDF: counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+
+(deftest receives
+  (is (= {:relations [{:type :receive, :data "counter", :behavior "Work",
+                       :conditions [{:type :always}]}]}
+         (p/parse "receive(counter, Work): {*}")))
+  (is (= {:relations [{:type :receive, :data "counter", :behavior "Work",
+                       :conditions [{:type :textual, :text "at home"}]}]}
+         (p/parse "receive(counter , Work): {\"at home\"}")))
+  (is (= {:relations [{:type :receive, :data "counter", :behavior "Work",
+                       :conditions [{:type :boolean, :predicate "f"}]}]}
+         (p/parse "receive( counter, Work ): {f}")))
+  (is (= {:relations [{:type :receive, :data "counter", :behavior "Work",
+                       :conditions [{:type :boolean, :predicate "f"}]}]}
+         (p/parse "receive( counter ,Work ): {f}")))
+  (is (= {:relations [{:type :receive, :data "counter", :behavior "Work",
+                       :conditions [{:type :existence, :data "Linea blanca detectada"}]}]}
+         (p/parse "receive(counter,Work) : {∃ Linea blanca detectada}")))
+  (is (= {:relations [{:type :receive, :data "counter", :behavior "Work",
+                       :conditions [{:type :non-existence, :data "Oponente adelante"}]}]}
+         (p/parse "receive( counter , Work ) : {∄Oponente adelante}")))
+  (is (= {:relations [{:type :receive, :data "counter", :behavior "Work",
+                       :conditions [{:type :non-existence, :data "Foo"}
+                                    {:type :existence, :data "Bar"}
+                                    {:type :boolean, :predicate "Baz"}
+                                    {:type :textual, :text "Wow"}]}]}
+         (p/parse "receive( counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
