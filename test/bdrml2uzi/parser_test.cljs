@@ -163,3 +163,70 @@
                                     {:type :boolean, :predicate "Baz"}
                                     {:type :textual, :text "Wow"}]}]}
          (p/parse "receive( counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+
+
+(deftest sends-without-data
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value nil,
+                       :conditions [{:type :always}]}]}
+         (p/parse "send(counter, Work): {*}")))
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value nil,
+                       :conditions [{:type :textual, :text "at home"}]}]}
+         (p/parse "send(counter , Work): {\"at home\"}")))
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value nil,
+                       :conditions [{:type :boolean, :predicate "f"}]}]}
+         (p/parse "send( counter, Work ): {f}")))
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value nil,
+                       :conditions [{:type :boolean, :predicate "f"}]}]}
+         (p/parse "send( counter ,Work ): {f}")))
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value nil,
+                       :conditions [{:type :existence, :data "Linea blanca detectada"}]}]}
+         (p/parse "send(counter,Work) : {∃ Linea blanca detectada}")))
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value nil,
+                       :conditions [{:type :non-existence, :data "Oponente adelante"}]}]}
+         (p/parse "send( counter , Work ) : {∄Oponente adelante}")))
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value nil,
+                       :conditions [{:type :non-existence, :data "Foo"}
+                                    {:type :existence, :data "Bar"}
+                                    {:type :boolean, :predicate "Baz"}
+                                    {:type :textual, :text "Wow"}]}]}
+         (p/parse "send( counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+
+(deftest sends-with-data
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value "+1",
+                       :conditions [{:type :always}]}]}
+         (p/parse "send(+1: counter, Work): {*}")))
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value "f",
+                       :conditions [{:type :textual, :text "at home"}]}]}
+         (p/parse "send(f : counter , Work): {\"at home\"}")))
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value "f",
+                       :conditions [{:type :boolean, :predicate "f"}]}]}
+         (p/parse "send( f:counter, Work ): {f}")))
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value "+100:::",
+                       :conditions [{:type :boolean, :predicate "f"}]}]}
+         (p/parse "send( +100::::counter ,Work ): {f}")))
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value "cualquier saraza es valida",
+                       :conditions [{:type :existence, :data "Linea blanca detectada"}]}]}
+         (p/parse "send(cualquier saraza es valida:counter,Work) : {∃ Linea blanca detectada}")))
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value "+1000",
+                       :conditions [{:type :non-existence, :data "Oponente adelante"}]}]}
+         (p/parse "send(     +1000    : counter , Work ) : {∄Oponente adelante}")))
+  (is (= {:relations [{:type :send, :data "counter", :behavior "Work",
+                       :value "-FSDFSDFSDF",
+                       :conditions [{:type :non-existence, :data "Foo"}
+                                    {:type :existence, :data "Bar"}
+                                    {:type :boolean, :predicate "Baz"}
+                                    {:type :textual, :text "Wow"}]}]}
+         (p/parse "send(-FSDFSDFSDF: counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
