@@ -26,7 +26,8 @@
                     "{" :conditions "}")
    :copy (trim-seq "copy" "(" :identifier "," :identifier ")" ":"
                    "{" :conditions "}")
-   :update "TODO"
+   :update (trim-seq "update" "(" (pp/optional (trim-seq :value ":")) :identifier ")" ":"
+                    "{" :conditions "}")
    :conditions (pp/separated-by (pp/or :always-cond :boolean-cond :textual-cond
                                        :existence-cond :non-existence-cond)
                                 (pp/trim ","))
@@ -69,6 +70,9 @@
    :copy (fn [[_ _ from _ to _ _ _ conditions _]]
            {:type :copy, :from from, :to to,
             :conditions conditions})
+   :update (fn [[_ _ [value _] data  _ _ _ conditions _]]
+           {:type :update, :data data,
+            :value value, :conditions conditions})
    :conditions (fn [conditions] (vec (take-nth 2 conditions)))
    :always-cond (constantly {:type :always})
    :boolean-cond (fn [p] {:type :boolean, :predicate p})

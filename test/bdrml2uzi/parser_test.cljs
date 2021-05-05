@@ -256,3 +256,70 @@
                                     {:type :boolean, :predicate "Baz"}
                                     {:type :textual, :text "Wow"}]}]}
          (p/parse "copy( counter,external counter ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+
+
+(deftest updates-without-data
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value nil,
+                       :conditions [{:type :always}]}]}
+         (p/parse "update(counter): {*}")))
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value nil,
+                       :conditions [{:type :textual, :text "at home"}]}]}
+         (p/parse "update(counter ): {\"at home\"}")))
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value nil,
+                       :conditions [{:type :boolean, :predicate "f"}]}]}
+         (p/parse "update( counter ): {f}")))
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value nil,
+                       :conditions [{:type :boolean, :predicate "f"}]}]}
+         (p/parse "update( counter ): {f}")))
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value nil,
+                       :conditions [{:type :existence, :data "Linea blanca detectada"}]}]}
+         (p/parse "update(counter) : {∃ Linea blanca detectada}")))
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value nil,
+                       :conditions [{:type :non-existence, :data "Oponente adelante"}]}]}
+         (p/parse "update( counter  ) : {∄Oponente adelante}")))
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value nil,
+                       :conditions [{:type :non-existence, :data "Foo"}
+                                    {:type :existence, :data "Bar"}
+                                    {:type :boolean, :predicate "Baz"}
+                                    {:type :textual, :text "Wow"}]}]}
+         (p/parse "update( counter) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+
+(deftest updates-with-data
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value "+1",
+                       :conditions [{:type :always}]}]}
+         (p/parse "update(+1: counter): {*}")))
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value "f",
+                       :conditions [{:type :textual, :text "at home"}]}]}
+         (p/parse "update(f : counter ): {\"at home\"}")))
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value "f",
+                       :conditions [{:type :boolean, :predicate "f"}]}]}
+         (p/parse "update( f:counter ): {f}")))
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value "+100:::",
+                       :conditions [{:type :boolean, :predicate "f"}]}]}
+         (p/parse "update( +100::::counter ): {f}")))
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value "cualquier saraza es valida",
+                       :conditions [{:type :existence, :data "Linea blanca detectada"}]}]}
+         (p/parse "update(cualquier saraza es valida:counter) : {∃ Linea blanca detectada}")))
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value "+1000",
+                       :conditions [{:type :non-existence, :data "Oponente adelante"}]}]}
+         (p/parse "update(     +1000    : counter  ) : {∄Oponente adelante}")))
+  (is (= {:relations [{:type :update, :data "counter",
+                       :value "-FSDFSDFSDF",
+                       :conditions [{:type :non-existence, :data "Foo"}
+                                    {:type :existence, :data "Bar"}
+                                    {:type :boolean, :predicate "Baz"}
+                                    {:type :textual, :text "Wow"}]}]}
+         (p/parse "update(-FSDFSDFSDF: counter) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
