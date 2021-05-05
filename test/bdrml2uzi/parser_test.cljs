@@ -230,3 +230,29 @@
                                     {:type :boolean, :predicate "Baz"}
                                     {:type :textual, :text "Wow"}]}]}
          (p/parse "send(-FSDFSDFSDF: counter,Work ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))
+
+(deftest copies
+  (is (= {:relations [{:type :copy, :from "counter", :to "external counter",
+                       :conditions [{:type :always}]}]}
+         (p/parse "copy(counter, external counter): {*}")))
+  (is (= {:relations [{:type :copy, :from "counter", :to "external counter",
+                       :conditions [{:type :textual, :text "at home"}]}]}
+         (p/parse "copy(counter , external counter): {\"at home\"}")))
+  (is (= {:relations [{:type :copy, :from "counter", :to "external counter",
+                       :conditions [{:type :boolean, :predicate "f"}]}]}
+         (p/parse "copy( counter, external counter ): {f}")))
+  (is (= {:relations [{:type :copy, :from "counter", :to "external counter",
+                       :conditions [{:type :boolean, :predicate "f"}]}]}
+         (p/parse "copy( counter ,external counter ): {f}")))
+  (is (= {:relations [{:type :copy, :from "counter", :to "external counter",
+                       :conditions [{:type :existence, :data "Linea blanca detectada"}]}]}
+         (p/parse "copy(counter,external counter) : {∃ Linea blanca detectada}")))
+  (is (= {:relations [{:type :copy, :from "counter", :to "external counter",
+                       :conditions [{:type :non-existence, :data "Oponente adelante"}]}]}
+         (p/parse "copy( counter , external counter ) : {∄Oponente adelante}")))
+  (is (= {:relations [{:type :copy, :from "counter", :to "external counter",
+                       :conditions [{:type :non-existence, :data "Foo"}
+                                    {:type :existence, :data "Bar"}
+                                    {:type :boolean, :predicate "Baz"}
+                                    {:type :textual, :text "Wow"}]}]}
+         (p/parse "copy( counter,external counter ) : {∄ Foo, ∃ Bar, Baz, \"Wow\"}"))))

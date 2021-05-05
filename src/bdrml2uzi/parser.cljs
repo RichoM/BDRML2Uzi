@@ -24,7 +24,8 @@
                    "{" :conditions "}")
    :send (trim-seq "send" "(" (pp/optional (trim-seq :value ":")) :identifier "," :identifier ")" ":"
                     "{" :conditions "}")
-   :copy "TODO"
+   :copy (trim-seq "copy" "(" :identifier "," :identifier ")" ":"
+                   "{" :conditions "}")
    :update "TODO"
    :conditions (pp/separated-by (pp/or :always-cond :boolean-cond :textual-cond
                                        :existence-cond :non-existence-cond)
@@ -65,6 +66,9 @@
    :send (fn [[_ _ [value _] data _ behavior _ _ _ conditions _]]
            {:type :send, :data data, :behavior behavior,
             :value value, :conditions conditions})
+   :copy (fn [[_ _ from _ to _ _ _ conditions _]]
+           {:type :copy, :from from, :to to,
+            :conditions conditions})
    :conditions (fn [conditions] (vec (take-nth 2 conditions)))
    :always-cond (constantly {:type :always})
    :boolean-cond (fn [p] {:type :boolean, :predicate p})
