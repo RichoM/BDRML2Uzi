@@ -2,18 +2,27 @@
   (:require [petitparser.core :as pp]
             [clojure.string :as str]))
 
-(defn trim-all [& parsers]
+(defn trim-seq [& parsers]
   (mapv pp/trim parsers))
 
 (def grammar
   {:start (pp/end :model)
-   :model (pp/plus (pp/or :behaviors :data-structures))
-   :behaviors (trim-all "B" "=" "{" (pp/separated-by :behavior-name (pp/trim ",")) "}")
+   :model (pp/plus (pp/or :behaviors :data-structures :transition))
+   :behaviors (trim-seq "B" "=" "{" (pp/separated-by :behavior-name (pp/trim ",")) "}")
    :behavior-name :identifier
-   :data-structures (trim-all (pp/or "De" "Di") "=" "{"
+   :data-structures (trim-seq (pp/or "De" "Di") "=" "{"
                               (pp/separated-by :data-def (pp/trim ","))
                               "}")
    :data-def [:identifier (pp/trim ":") (pp/plus pp/letter)]
+   :transition (trim-seq "trans" "(" :behavior-name "," :behavior-name ")" ":"
+                         "{" (pp/separated-by :condition (pp/trim ",")) "}")
+   :condition (pp/or :always-cond :boolean-cond :textual-cond
+                     :existence-cond :non-existence-cond)
+   :always-cond "*"
+   :boolean-cond :identifier
+   :textual-cond (trim-seq "\"" :identifier "\"")
+   :existence-cond (trim-seq "∃" :identifier)
+   :non-existence-cond (trim-seq "∄" :identifier)
    :identifier (pp/flatten (pp/plus (pp/or pp/word pp/space)))})
 
 (def transformations
@@ -27,6 +36,14 @@
                          "De" :external-data
                          "Di" :internal-data)
                        (vec (take-nth 2 data))})
+   :transition (fn [[_ _ from _ to _ _ _ conditions _]]
+                 {:transitions [{:from from, :to to,
+                                 :conditions (vec (take-nth 2 conditions))}]})
+   :always-cond (constantly {:type :always})
+   :boolean-cond (fn [p] {:type :boolean, :predicate p})
+   :textual-cond (fn [[_ text _]] {:type :textual, :text text})
+   :existence-cond (fn [[_ data]] {:type :existence, :data data})
+   :non-existence-cond (fn [[_ data]] {:type :non-existence, :data data})
    :identifier str/trim})
 
 (def parser (pp/compose grammar transformations))
