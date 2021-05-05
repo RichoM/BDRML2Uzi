@@ -3,3 +3,6 @@
 
 (defn init []
   (println "Hello World"))
+
+(defn ^:export parse [src]
+  (clj->js (p/parse src)))

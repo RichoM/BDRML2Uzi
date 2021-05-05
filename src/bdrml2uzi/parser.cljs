@@ -28,6 +28,8 @@
 
 (def parser (pp/compose grammar transformations))
 
+(defn parse [src] (pp/parse parser src))
+
 (comment
   (set! *print-length* 100)
   (take-nth 2 (range 0 10))

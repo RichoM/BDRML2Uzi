@@ -5,6 +5,28 @@
     <title></title>
   </head>
   <body>
+    <div>
+      <textarea rows="20" cols="70" id="input"></textarea>
+    </div>
+    <div>
+      <button type="button" id="parse-button">Parse</button>
+    </div>
+
+    <pre id="output"></pre>
+
     <script src="js/main.js"></script>
+    <script type="text/javascript">
+    document.querySelector("#parse-button").onclick = function () {
+      try {
+        let value = document.querySelector("#input").value;
+        let output = bdrml2uzi.core.parse(value);
+        console.log(output);
+        document.querySelector("#output").innerText = JSON.stringify(output, null, 2);
+      } catch (err) {
+        document.querySelector("#output").innerText = err.toString();
+        console.error(err);
+      }
+    }
+    </script>
   </body>
 </html>
