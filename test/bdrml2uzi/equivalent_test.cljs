@@ -73,18 +73,26 @@
   (is (not (equivalent? {:a 1} [:a 1])))
   (is (not (equivalent? {:a 1} (seq {:a 1})))))
 
+(deftest equivalent?-works-on-sets
+  (is (equivalent? #{1 2 3} #{1 2 3}))
+  (is (equivalent? #{1 2 3} #{3 2 1}))
+  (is (equivalent? #{1 2 3} #{1 2 3 5}))
+  (is (equivalent? #{[1 2] 3} #{3 5 '(1 2 3) 2}))
+  (is (not (equivalent? #{[1 2] 3} #{3 5 '(1 3) 2})))
+  (is (not (equivalent? #{[1 2] [3 4]} #{[1 2 3 4] 3 4}))))
+
 (deftest equivalent?-works-on-nested-structures
   (is (equivalent? {:first-name "Jorge"
                     :middle-name "Ricardo"
                     :last-name "Moran"
                     :birth-date {:year 1998, :month 4, :day 7}
-                    :addresses ["Avenida Siempreviva 742"
-                                "221B Baker Street"]}
+                    :addresses #{"Avenida Siempreviva 742"
+                                 "221B Baker Street"}}
                    {:first-name "Jorge"
                     :middle-name "Ricardo"
                     :last-name "Moran"
                     :nick-names ["Richo" "Richi" "OCHO"]
                     :birth-date {:year 1998, :month 4, :day 7, :day-of-week "Thursday"}
                     :addresses ["Avenida Siempreviva 742"
-                                "221B Baker Street"
-                                "Privet Drive 4"]})))
+                                "Privet Drive 4"
+                                "221B Baker Street"]})))

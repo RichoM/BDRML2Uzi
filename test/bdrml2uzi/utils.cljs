@@ -1,5 +1,14 @@
 (ns bdrml2uzi.utils)
 
+(comment
+ (def pred (fn [a] (println a)
+             (odd? a)))
+
+(def s #{1 2 3 4 5 6})
+(contains? s 1)
+(every? number? s)
+ ,,)
+
 (declare equivalent?)
 
 (defn- equivalent-sequential? [a b]
@@ -29,9 +38,17 @@
             true)
           false)))))
 
+(defn- equivalent-set? [a b]
+  (every? (fn [v]
+            (or (contains? b v)
+                (some (fn [v'] (equivalent? v v'))
+                      b)))
+          a))
+
 (defn equivalent? [a b]
   (or (= a b)
       (cond
         (sequential? a) (equivalent-sequential? a b)
         (map? a) (equivalent-map? a b)
+        (set? a) (equivalent-set? a b)
         :else (= a b))))
