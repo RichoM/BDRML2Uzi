@@ -41,22 +41,21 @@
           [(ast/resume-node (as-identifier behavior))
            (ast/yield-node)]
 
-          (let [transitions (filter (fn [{:keys [type from]}]
-                                      (and (= :transition type)
-                                           (= behavior from)))
-                                    (:relations bdrml))]
-            (map (fn [{:keys [conditions to]}]
-                   (ast/conditional-node
-                    (if (= 1 (count conditions))
-                      (ast/call-node (as-identifier (condition-data (first conditions))) [])
-                      (throw (js/Error. "ACAACA")))
-                    (ast/block-node
-                     [(ast/call-node "transitions.push"
-                                     [(ast/arg-node
-                                       (ast/literal-number-node
-                                        (index-of (:behaviors bdrml)
-                                                  to)))])])))
-                 transitions))
+          (map (fn [{:keys [conditions to]}]
+                 (ast/conditional-node
+                  (if (= 1 (count conditions))
+                    (ast/call-node (as-identifier (condition-data (first conditions))) [])
+                    (throw (js/Error. "ACAACA")))
+                  (ast/block-node
+                   [(ast/call-node "transitions.push"
+                                   [(ast/arg-node
+                                     (ast/literal-number-node
+                                      (index-of (:behaviors bdrml)
+                                                to)))])])))
+               (filter (fn [{:keys [type from]}]
+                         (and (= :transition type)
+                              (= behavior from)))
+                       (:relations bdrml)))
 
           [(ast/conditional-node
             (ast/call-node ">" [(ast/arg-node (ast/call-node "transitions.count" []))
