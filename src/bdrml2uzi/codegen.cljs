@@ -78,6 +78,7 @@
 (defn generate-loop-task [{:keys [behaviors external-data relations] :as bdrml}]
   (ast/task-node
    :name "loop"
+   :state "running"
    :body (ast/block-node
           (vec (concat [(ast/call-node "transitions.clear" [])]
                        (map-indexed (fn [index behavior]

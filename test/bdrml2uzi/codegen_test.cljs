@@ -71,6 +71,7 @@
         :scripts
         #{(ast/task-node
            :name "loop"
+           :state "running"
            :body (ast/block-node
                   [(ast/call-node "transitions.clear" [])
                    (ast/conditional-node
