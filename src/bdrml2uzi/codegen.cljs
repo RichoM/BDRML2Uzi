@@ -5,6 +5,13 @@
 
 (def ^:const empty-block (ast/block-node []))
 
+(defn- index-of [s v]
+  (loop [idx 0 items s]
+    (cond
+      (empty? items) nil
+      (= v (first items)) idx
+      :else (recur (inc idx) (rest items)))))
+
 (defn- as-identifier [name]
   (-> name
       str/lower-case
@@ -26,12 +33,12 @@
 (defmethod condition-data :textual [{:keys [text]}] text)
 (defmethod condition-data :always [_] nil)
 
-(defn- index-of [s v]
-  (loop [idx 0 items s]
-    (cond
-      (empty? items) nil
-      (= v (first items)) idx
-      :else (recur (inc idx) (rest items)))))
+(defn generate-condition-call [condition]
+ (case (:type condition)
+   :always (throw (js/Error. "ACAACA always!"))
+   :non-existence (ast/call-node "!"
+                                 [(ast/arg-node (ast/call-node (as-identifier (condition-data condition)) []))])
+   (ast/call-node (as-identifier (condition-data condition)) [])))
 
 (defn- generate-state-block [index behavior bdrml]
   (ast/conditional-node
@@ -39,13 +46,13 @@
                         (ast/arg-node (ast/literal-number-node index))])
    (ast/block-node
     (vec (concat
-          [(ast/resume-node (as-identifier behavior))
+          [(ast/resume-node [(as-identifier behavior)])
            (ast/yield-node)]
 
           (map (fn [{:keys [conditions to]}]
                  (ast/conditional-node
                   (if (= 1 (count conditions))
-                    (ast/call-node (as-identifier (condition-data (first conditions))) [])
+                    (generate-condition-call (first conditions))
                     (throw (js/Error. "ACAACA")))
                   (ast/block-node
                    [(ast/call-node "transitions.push"
@@ -65,7 +72,7 @@
              [(ast/assignment-node
                (ast/variable-node "state")
                (ast/call-node "transitions.get_random" []))
-              (ast/stop-node (as-identifier behavior))]))
+              (ast/stop-node [(as-identifier behavior)])]))
            (ast/return-node)])))))
 
 (defn generate-loop-task [{:keys [behaviors external-data relations] :as bdrml}]

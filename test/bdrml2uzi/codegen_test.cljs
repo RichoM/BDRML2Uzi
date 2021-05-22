@@ -77,7 +77,7 @@
                     (ast/call-node "==" [(ast/arg-node (ast/variable-node "state"))
                                          (ast/arg-node (ast/literal-number-node 0))])
                     (ast/block-node
-                     [(ast/resume-node "buscar")
+                     [(ast/resume-node ["buscar"])
                       (ast/yield-node)
                       (ast/conditional-node
                        (ast/call-node "linea_blanca_detectada" [])
@@ -94,6 +94,8 @@
                         [(ast/assignment-node
                           (ast/variable-node "state")
                           (ast/call-node "transitions.get_random" []))
-                         (ast/stop-node "buscar")]))
+                         (ast/stop-node ["buscar"])]))
                       (ast/return-node)]))]))})
        (cg/generate-ast BDRML))))
+
+;; TODO(Richo): Test condition always, test non-existence (should negate), test multiple conditions
