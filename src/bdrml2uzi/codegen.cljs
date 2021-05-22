@@ -1,5 +1,6 @@
 (ns bdrml2uzi.codegen
   (:require [clojure.string :as str]
+            [clojure.walk :as w]
             [middleware.parser.ast-nodes :as ast]
             [middleware.code-generator.code-generator :as uzi]))
 
@@ -17,13 +18,42 @@
       str/lower-case
       (str/replace #"[^a-zA-Z0-9_]" "_")))
 
+(defn- enforce-unique-identifiers [bdrml]
+  (let [names (volatile! {})
+        temp (w/postwalk (fn [o]
+                           (if (string? o)
+                             (if-let [uuid (@names o)]
+                               uuid
+                               (let [uuid (random-uuid)]
+                                 (vswap! names assoc o uuid)
+                                 uuid))
+                             o))
+                         bdrml)
+        used-names (volatile! #{})
+        unique-name (fn [name]
+                      (let [id (as-identifier name)]
+                        (if (contains? @used-names id)
+                          (recur (str name "_"))
+                          (do
+                            (vswap! used-names conj id)
+                            id))))
+        identifiers (into {}
+                          (map (fn [[name uuid]]
+                                 [uuid (unique-name name)])
+                               @names))]
+    (w/postwalk (fn [o]
+                  (if-let [id (identifiers o)]
+                    id
+                    o))
+                temp)))
+
 (defn- behavior-as-script [name]
-  (ast/task-node :name (as-identifier name)
+  (ast/task-node :name name
                  :body empty-block
                  :state "stopped"))
 
 (defn- data-as-script [name]
-  (ast/function-node :name (as-identifier name)
+  (ast/function-node :name name
                      :body empty-block))
 
 (defmulti condition-data :type)
@@ -37,8 +67,8 @@
  (case (:type condition)
    :always (ast/literal-number-node 1)
    :non-existence (ast/call-node "!"
-                                 [(ast/arg-node (ast/call-node (as-identifier (condition-data condition)) []))])
-   (ast/call-node (as-identifier (condition-data condition)) [])))
+                                 [(ast/arg-node (ast/call-node (condition-data condition) []))])
+   (ast/call-node (condition-data condition) [])))
 
 (defn generate-composed-condition-call [[head & tail]]
   (if head
@@ -56,7 +86,7 @@
                         (ast/arg-node (ast/literal-number-node index))])
    (ast/block-node
     (vec (concat
-          [(ast/resume-node [(as-identifier behavior)])
+          [(ast/resume-node [behavior])
            (ast/yield-node)]
 
           (map (fn [{:keys [conditions to]}]
@@ -80,7 +110,7 @@
              [(ast/assignment-node
                (ast/variable-node "state")
                (ast/call-node "transitions.get_random" []))
-              (ast/stop-node [(as-identifier behavior)])]))
+              (ast/stop-node [behavior])]))
            (ast/return-node)])))))
 
 (defn generate-loop-task [{:keys [behaviors external-data relations] :as bdrml}]
@@ -93,27 +123,39 @@
                                       (generate-state-block index behavior bdrml))
                                     behaviors))))))
 
-(defn generate-ast [{:keys [behaviors external-data relations] :as bdrml}]
-  (ast/program-node
-   :globals [(ast/variable-declaration-node "state")]
-   :imports [(ast/import-node "transitions" "List.uzi"
-                              (ast/block-node
-                               [(ast/assignment-node
-                                 (ast/variable-node "size")
-                                 (ast/literal-number-node (dec (count behaviors))))]))]
-   :scripts (vec (concat
-                  [(generate-loop-task bdrml)]
-                  (map behavior-as-script behaviors)
-                  (map data-as-script
-                       (set (keep condition-data
-                                  (mapcat :conditions relations))))))))
+(defn generate-ast [bdrml]
+  (let [{:keys [behaviors external-data relations] :as bdrml} (enforce-unique-identifiers bdrml)]
+    (ast/program-node
+     :globals [(ast/variable-declaration-node "state")]
+     :imports [(ast/import-node "transitions" "List.uzi"
+                                (ast/block-node
+                                 [(ast/assignment-node
+                                   (ast/variable-node "size")
+                                   (ast/literal-number-node (dec (count behaviors))))]))]
+     :scripts (vec (concat
+                    [(generate-loop-task bdrml)]
+                    (map behavior-as-script behaviors)
+                    (map data-as-script
+                         (set (keep condition-data
+                                    (mapcat :conditions relations)))))))))
 
 (defn generate-code [bdrml]
   (-> bdrml
       generate-ast
       uzi/print))
 
+
 (comment
+
+(enforce-unique-identifiers bdrml)
+(def bdrml (bdrml2uzi.parser/parse
+            "B = {Buscar, buscar, Ataque frontal, Retroceder}
+             De = {Oponente  adelante: bool, Linea blanca detectada: bool}
+             trans(Buscar, Retroceder) : {∃ Linea blanca detectada}
+             trans(Retroceder, buscar) : {Tr elapsed}
+             trans(Buscar, Ataque frontal) : {∃ Oponente  adelante}
+             trans(Ataque frontal, buscar) : {∄ Oponente  adelante}
+             trans(Ataque frontal, Retroceder) : {∃ Linea blanca detectada}"))
 
 (conj #{} [1 2 3 4])
 (apply set [1 2 3] [2 3 4])
