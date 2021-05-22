@@ -8,13 +8,13 @@
     <div style="float:left">
       <div>
         <textarea rows="20" cols="70" id="input">
-  B = {Buscar, Retroceder, Ataque frontal}
-  De = {Oponente  adelante: bool, Linea blanca detectada: bool}
-  trans(Buscar, Retroceder) : {∃ Linea blanca detectada}
-  trans(Retroceder, Buscar) : {Tr elapsed}
-  trans(Buscar, Ataque frontal) : {∃ Oponente  adelante}
-  trans(Ataque frontal, Buscar) : {∄ Oponente  adelante}
-  trans(Ataque frontal, Retroceder) : {∃ Linea blanca detectada}
+B = {Buscar, Retroceder, Ataque frontal}
+De = {Oponente  adelante: bool, Linea blanca detectada: bool}
+trans(Buscar, Retroceder) : {∃ Linea blanca detectada}
+trans(Retroceder, Buscar) : {Tr elapsed}
+trans(Buscar, Ataque frontal) : {∃ Oponente  adelante}
+trans(Ataque frontal, Buscar) : {∄ Oponente  adelante}
+trans(Ataque frontal, Retroceder) : {∃ Linea blanca detectada}
         </textarea>
       </div>
       <div>
