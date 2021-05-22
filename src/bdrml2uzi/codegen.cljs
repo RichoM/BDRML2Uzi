@@ -35,10 +35,20 @@
 
 (defn generate-condition-call [condition]
  (case (:type condition)
-   :always (throw (js/Error. "ACAACA always!"))
+   :always (ast/literal-number-node 1)
    :non-existence (ast/call-node "!"
                                  [(ast/arg-node (ast/call-node (as-identifier (condition-data condition)) []))])
    (ast/call-node (as-identifier (condition-data condition)) [])))
+
+(defn generate-composed-condition-call [[head & tail]]
+  (if head
+    (reduce (fn [subtotal next-item]
+            (ast/logical-or-node
+             subtotal
+             (generate-condition-call next-item)))
+          (generate-condition-call head)
+          tail)
+    (ast/literal-number-node 1)))
 
 (defn- generate-state-block [index behavior bdrml]
   (ast/conditional-node
@@ -51,9 +61,7 @@
 
           (map (fn [{:keys [conditions to]}]
                  (ast/conditional-node
-                  (if (= 1 (count conditions))
-                    (generate-condition-call (first conditions))
-                    (throw (js/Error. "ACAACA")))
+                  (generate-composed-condition-call conditions)
                   (ast/block-node
                    [(ast/call-node "transitions.push"
                                    [(ast/arg-node

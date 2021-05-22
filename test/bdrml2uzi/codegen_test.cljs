@@ -99,4 +99,170 @@
                       (ast/return-node)]))]))})
        (cg/generate-ast BDRML))))
 
-;; TODO(Richo): Test condition always, test non-existence (should negate), test multiple conditions
+
+(deftest transition-with-multiple-conditions
+  (let [BDRML (p/parse
+               "B = {A, B }
+                trans(A, B ) : {foo,bar}")]
+    (is (equivalent?
+         (ast/program-node
+          :scripts #{(ast/task-node
+                      :name "loop"
+                      :state "running"
+                      :body (ast/block-node
+                             [(ast/call-node "transitions.clear" [])
+                              (ast/conditional-node
+                               (ast/call-node "==" [(ast/arg-node (ast/variable-node "state"))
+                                                    (ast/arg-node (ast/literal-number-node 0))])
+                               (ast/block-node
+                                [(ast/resume-node ["a"])
+                                 (ast/yield-node)
+                                 (ast/conditional-node
+                                  (ast/logical-or-node
+                                   (ast/call-node "foo" [])
+                                   (ast/call-node "bar" []))
+                                  (ast/block-node [(ast/call-node "transitions.push"
+                                                                  [(ast/arg-node (ast/literal-number-node 1))])]))
+                                 (ast/conditional-node
+                                  (ast/call-node ">" [(ast/arg-node (ast/call-node "transitions.count" []))
+                                                      (ast/arg-node (ast/literal-number-node 0))])
+                                  (ast/block-node
+                                   [(ast/assignment-node
+                                     (ast/variable-node "state")
+                                     (ast/call-node "transitions.get_random" []))
+                                    (ast/stop-node ["a"])]))
+                                 (ast/return-node)]))]))})
+         (cg/generate-ast BDRML)))))
+
+(deftest transition-with-multiple-conditions-2
+  (let [BDRML (p/parse
+               "B = {A, B }
+                trans(A, B ) : {foo,bar,baz}")]
+    (is (equivalent?
+         (ast/program-node
+          :scripts #{(ast/task-node
+                      :name "loop"
+                      :state "running"
+                      :body (ast/block-node
+                             [(ast/call-node "transitions.clear" [])
+                              (ast/conditional-node
+                               (ast/call-node "==" [(ast/arg-node (ast/variable-node "state"))
+                                                    (ast/arg-node (ast/literal-number-node 0))])
+                               (ast/block-node
+                                [(ast/resume-node ["a"])
+                                 (ast/yield-node)
+                                 (ast/conditional-node
+                                  (ast/logical-or-node
+                                   (ast/logical-or-node
+                                    (ast/call-node "foo" [])
+                                    (ast/call-node "bar" []))
+                                   (ast/call-node "baz" []))
+                                  (ast/block-node [(ast/call-node "transitions.push"
+                                                                  [(ast/arg-node (ast/literal-number-node 1))])]))
+                                 (ast/conditional-node
+                                  (ast/call-node ">" [(ast/arg-node (ast/call-node "transitions.count" []))
+                                                      (ast/arg-node (ast/literal-number-node 0))])
+                                  (ast/block-node
+                                   [(ast/assignment-node
+                                     (ast/variable-node "state")
+                                     (ast/call-node "transitions.get_random" []))
+                                    (ast/stop-node ["a"])]))
+                                 (ast/return-node)]))]))})
+         (cg/generate-ast BDRML)))))
+
+(deftest transition-with-condition-always
+  (let [BDRML (p/parse
+               "B = {A, B }
+                trans(A, B ) : {*}")]
+    (is (equivalent?
+         (ast/program-node
+          :scripts #{(ast/task-node
+                      :name "loop"
+                      :state "running"
+                      :body (ast/block-node
+                             [(ast/call-node "transitions.clear" [])
+                              (ast/conditional-node
+                               (ast/call-node "==" [(ast/arg-node (ast/variable-node "state"))
+                                                    (ast/arg-node (ast/literal-number-node 0))])
+                               (ast/block-node
+                                [(ast/resume-node ["a"])
+                                 (ast/yield-node)
+                                 (ast/conditional-node
+                                  (ast/literal-number-node 1)
+                                  (ast/block-node [(ast/call-node "transitions.push"
+                                                                  [(ast/arg-node (ast/literal-number-node 1))])]))
+                                 (ast/conditional-node
+                                  (ast/call-node ">" [(ast/arg-node (ast/call-node "transitions.count" []))
+                                                      (ast/arg-node (ast/literal-number-node 0))])
+                                  (ast/block-node
+                                   [(ast/assignment-node
+                                     (ast/variable-node "state")
+                                     (ast/call-node "transitions.get_random" []))
+                                    (ast/stop-node ["a"])]))
+                                 (ast/return-node)]))]))})
+         (cg/generate-ast BDRML)))))
+
+(deftest transition-without-conditions
+  (let [BDRML (p/parse
+               "B = {A, B }
+               trans(A, B )")]
+    (is (equivalent?
+         (ast/program-node
+          :scripts #{(ast/task-node
+                      :name "loop"
+                      :state "running"
+                      :body (ast/block-node
+                             [(ast/call-node "transitions.clear" [])
+                              (ast/conditional-node
+                               (ast/call-node "==" [(ast/arg-node (ast/variable-node "state"))
+                                                    (ast/arg-node (ast/literal-number-node 0))])
+                               (ast/block-node
+                                [(ast/resume-node ["a"])
+                                 (ast/yield-node)
+                                 (ast/conditional-node
+                                  (ast/literal-number-node 1)
+                                  (ast/block-node [(ast/call-node "transitions.push"
+                                                                  [(ast/arg-node (ast/literal-number-node 1))])]))
+                                 (ast/conditional-node
+                                  (ast/call-node ">" [(ast/arg-node (ast/call-node "transitions.count" []))
+                                                      (ast/arg-node (ast/literal-number-node 0))])
+                                  (ast/block-node
+                                   [(ast/assignment-node
+                                     (ast/variable-node "state")
+                                     (ast/call-node "transitions.get_random" []))
+                                    (ast/stop-node ["a"])]))
+                                 (ast/return-node)]))]))})
+         (cg/generate-ast BDRML)))))
+
+(deftest transition-with-condition-non-existence
+  (let [BDRML (p/parse
+               "B = {A, B }
+                trans(A, B ) : {∄ foo}")]
+    (is (equivalent?
+         (ast/program-node
+          :scripts #{(ast/task-node
+                      :name "loop"
+                      :state "running"
+                      :body (ast/block-node
+                             [(ast/call-node "transitions.clear" [])
+                              (ast/conditional-node
+                               (ast/call-node "==" [(ast/arg-node (ast/variable-node "state"))
+                                                    (ast/arg-node (ast/literal-number-node 0))])
+                               (ast/block-node
+                                [(ast/resume-node ["a"])
+                                 (ast/yield-node)
+                                 (ast/conditional-node
+                                  (ast/call-node "!"
+                                                 [(ast/arg-node (ast/call-node "foo" []))])
+                                  (ast/block-node [(ast/call-node "transitions.push"
+                                                                  [(ast/arg-node (ast/literal-number-node 1))])]))
+                                 (ast/conditional-node
+                                  (ast/call-node ">" [(ast/arg-node (ast/call-node "transitions.count" []))
+                                                      (ast/arg-node (ast/literal-number-node 0))])
+                                  (ast/block-node
+                                   [(ast/assignment-node
+                                     (ast/variable-node "state")
+                                     (ast/call-node "transitions.get_random" []))
+                                    (ast/stop-node ["a"])]))
+                                 (ast/return-node)]))]))})
+         (cg/generate-ast BDRML)))))
