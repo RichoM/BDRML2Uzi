@@ -18,8 +18,85 @@
   (ast/function-node :name (as-identifier name)
                      :body empty-block))
 
-(defn generate-code [{:keys [behaviors external-data]}]
+(defmulti condition-data :type)
+(defmethod condition-data :existence [{:keys [data]}] data)
+(defmethod condition-data :non-existence [{:keys [data]}] data)
+(defmethod condition-data :boolean [{:keys [predicate]}] predicate)
+(defmethod condition-data :textual [{:keys [text]}] text)
+(defmethod condition-data :always [_] nil)
+
+(defn- index-of [s v]
+  (loop [idx 0 items s]
+    (cond
+      (empty? items) nil
+      (= v (first items)) idx
+      :else (recur (inc idx) (rest items)))))
+
+(defn- generate-state-block [index behavior bdrml]
+  (ast/conditional-node
+   (ast/call-node "==" [(ast/arg-node (ast/variable-node "state"))
+                        (ast/arg-node (ast/literal-number-node index))])
+   (ast/block-node
+    (vec (concat
+          [(ast/resume-node (as-identifier behavior))
+           (ast/yield-node)]
+
+          (let [transitions (filter (fn [{:keys [type from]}]
+                                      (and (= :transition type)
+                                           (= behavior from)))
+                                    (:relations bdrml))]
+            (map (fn [{:keys [conditions to]}]
+                   (ast/conditional-node
+                    (if (= 1 (count conditions))
+                      (ast/call-node (as-identifier (condition-data (first conditions))) [])
+                      (throw (js/Error. "ACAACA")))
+                    (ast/block-node
+                     [(ast/call-node "transitions.push"
+                                     [(ast/arg-node
+                                       (ast/literal-number-node
+                                        (index-of (:behaviors bdrml)
+                                                  to)))])])))
+                 transitions))
+
+          [(ast/conditional-node
+            (ast/call-node ">" [(ast/arg-node (ast/call-node "transitions.count" []))
+                                (ast/arg-node (ast/literal-number-node 0))])
+            (ast/block-node
+             [(ast/assignment-node
+               (ast/variable-node "state")
+               (ast/call-node "transitions.get_random" []))
+              (ast/stop-node (as-identifier behavior))]))
+           (ast/return-node)])))))
+
+(defn generate-loop-task [{:keys [behaviors external-data relations] :as bdrml}]
+  (ast/task-node
+   :name "loop"
+   :body (ast/block-node
+          (vec (concat [(ast/call-node "transitions.clear" [])]
+                       (map-indexed (fn [index behavior]
+                                      (generate-state-block index behavior bdrml))
+                                    behaviors))))))
+
+(defn generate-code [{:keys [behaviors external-data relations] :as bdrml}]
   (ast/program-node
-   :scripts (concat
-             (mapv behavior-as-script behaviors)
-             (mapv data-as-script external-data))))
+   :globals [(ast/variable-declaration-node "state")]
+   :imports [(ast/import-node "transitions" "List.uzi"
+                              (ast/block-node
+                               [(ast/assignment-node
+                                 (ast/variable-node "size")
+                                 (ast/literal-number-node (dec (count behaviors))))]))]
+   :scripts (vec (concat
+                  [(generate-loop-task bdrml)]
+                  (map behavior-as-script behaviors)
+                  (map data-as-script
+                       (set (keep condition-data
+                                  (mapcat :conditions relations))))))))
+
+(comment
+
+(conj #{} [1 2 3 4])
+(apply set [1 2 3] [2 3 4])
+(into #{}
+      [1 2 3])
+
+ ,,)

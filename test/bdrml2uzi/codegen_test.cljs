@@ -36,3 +36,60 @@
                                (ast/function-node :name "linea_blanca_detectada"
                                                   :body empty-body)})
                    (cg/generate-code BDRML))))
+
+(deftest all-conditions-are-mapped-to-functions
+  (is (equivalent? (ast/program-node
+                    :scripts #{(ast/function-node :name "tr_elapsed"
+                                                  :body empty-body)
+                               (ast/function-node :name "oponente__adelante"
+                                                  :body empty-body)
+                               (ast/function-node :name "linea_blanca_detectada"
+                                                  :body empty-body)})
+                   (cg/generate-code BDRML))))
+
+(deftest generated-program-should-import-the-list-library
+  (is (equivalent? (ast/program-node
+                    :imports [(ast/import-node "transitions" "List.uzi"
+                                               (ast/block-node
+                                                [(ast/assignment-node
+                                                  (ast/variable-node "size")
+                                                  (ast/literal-number-node 2))]))])
+                   (cg/generate-code BDRML))))
+
+(deftest generated-program-should-declare-global-variable-state
+  (is (equivalent? (ast/program-node
+                    :globals [(ast/variable-declaration-node "state")])
+                   (cg/generate-code BDRML))))
+
+(deftest transitions-are-mapped-to-a-loop-task-state-machine
+  (is (equivalent?
+       (ast/program-node
+        :scripts
+        #{(ast/task-node
+           :name "loop"
+           :body (ast/block-node
+                  [(ast/call-node "transitions.clear" [])
+                   (ast/conditional-node
+                    (ast/call-node "==" [(ast/arg-node (ast/variable-node "state"))
+                                         (ast/arg-node (ast/literal-number-node 0))])
+                    (ast/block-node
+                     [(ast/resume-node "buscar")
+                      (ast/yield-node)
+                      (ast/conditional-node
+                       (ast/call-node "linea_blanca_detectada" [])
+                       (ast/block-node [(ast/call-node "transitions.push"
+                                                       [(ast/arg-node (ast/literal-number-node 1))])]))
+                      (ast/conditional-node
+                       (ast/call-node "oponente__adelante" [])
+                       (ast/block-node [(ast/call-node "transitions.push"
+                                                       [(ast/arg-node (ast/literal-number-node 2))])]))
+                      (ast/conditional-node
+                       (ast/call-node ">" [(ast/arg-node (ast/call-node "transitions.count" []))
+                                           (ast/arg-node (ast/literal-number-node 0))])
+                       (ast/block-node
+                        [(ast/assignment-node
+                          (ast/variable-node "state")
+                          (ast/call-node "transitions.get_random" []))
+                         (ast/stop-node "buscar")]))
+                      (ast/return-node)]))]))})
+       (cg/generate-code BDRML))))
