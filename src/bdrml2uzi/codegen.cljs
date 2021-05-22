@@ -76,7 +76,7 @@
                                       (generate-state-block index behavior bdrml))
                                     behaviors))))))
 
-(defn generate-code [{:keys [behaviors external-data relations] :as bdrml}]
+(defn generate-ast [{:keys [behaviors external-data relations] :as bdrml}]
   (ast/program-node
    :globals [(ast/variable-declaration-node "state")]
    :imports [(ast/import-node "transitions" "List.uzi"

@@ -27,7 +27,7 @@
                                (ast/task-node :name "ataque_frontal"
                                               :body empty-body
                                               :state "stopped")})
-                   (cg/generate-code BDRML))))
+                   (cg/generate-ast BDRML))))
 
 (deftest external-data-are-mapped-to-functions
   (is (equivalent? (ast/program-node
@@ -35,7 +35,7 @@
                                                   :body empty-body)
                                (ast/function-node :name "linea_blanca_detectada"
                                                   :body empty-body)})
-                   (cg/generate-code BDRML))))
+                   (cg/generate-ast BDRML))))
 
 (deftest all-conditions-are-mapped-to-functions
   (is (equivalent? (ast/program-node
@@ -45,7 +45,7 @@
                                                   :body empty-body)
                                (ast/function-node :name "linea_blanca_detectada"
                                                   :body empty-body)})
-                   (cg/generate-code BDRML))))
+                   (cg/generate-ast BDRML))))
 
 (deftest generated-program-should-import-the-list-library
   (is (equivalent? (ast/program-node
@@ -54,12 +54,12 @@
                                                 [(ast/assignment-node
                                                   (ast/variable-node "size")
                                                   (ast/literal-number-node 2))]))])
-                   (cg/generate-code BDRML))))
+                   (cg/generate-ast BDRML))))
 
 (deftest generated-program-should-declare-global-variable-state
   (is (equivalent? (ast/program-node
                     :globals [(ast/variable-declaration-node "state")])
-                   (cg/generate-code BDRML))))
+                   (cg/generate-ast BDRML))))
 
 (deftest transitions-are-mapped-to-a-loop-task-state-machine
   (is (equivalent?
@@ -92,4 +92,4 @@
                           (ast/call-node "transitions.get_random" []))
                          (ast/stop-node "buscar")]))
                       (ast/return-node)]))]))})
-       (cg/generate-code BDRML))))
+       (cg/generate-ast BDRML))))
