@@ -18,6 +18,7 @@ trans(Ataque frontal, Retroceder) : {∃ Linea blanca detectada}
     </div>
     <div>
       <button type="button" id="parse-button">Parse</button>
+      <button type="button" id="codegen-button">Generate code</button>
     </div>
 
     <pre id="output"></pre>
@@ -30,6 +31,18 @@ trans(Ataque frontal, Retroceder) : {∃ Linea blanca detectada}
         let output = bdrml2uzi.core.parse(value);
         console.log(output);
         document.querySelector("#output").innerText = JSON.stringify(output, null, 2);
+      } catch (err) {
+        document.querySelector("#output").innerText = err.toString();
+        console.error(err);
+      }
+    }
+
+    document.querySelector("#codegen-button").onclick = function () {
+      try {
+        let value = document.querySelector("#input").value;
+        let output = bdrml2uzi.core.codegen(value);
+        console.log(output);
+        document.querySelector("#output").innerText = output;
       } catch (err) {
         document.querySelector("#output").innerText = err.toString();
         console.error(err);
