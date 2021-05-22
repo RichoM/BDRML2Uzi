@@ -1,6 +1,7 @@
 (ns bdrml2uzi.codegen
   (:require [clojure.string :as str]
-            [middleware.parser.ast-nodes :as ast]))
+            [middleware.parser.ast-nodes :as ast]
+            [middleware.code-generator.code-generator :as uzi]))
 
 (def ^:const empty-block (ast/block-node []))
 
@@ -90,6 +91,11 @@
                   (map data-as-script
                        (set (keep condition-data
                                   (mapcat :conditions relations))))))))
+
+(defn generate-code [bdrml]
+  (-> bdrml
+      generate-ast
+      uzi/print))
 
 (comment
 

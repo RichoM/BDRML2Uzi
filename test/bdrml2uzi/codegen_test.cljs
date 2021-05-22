@@ -14,6 +14,10 @@
                      trans(Ataque frontal, Buscar) : {∄ Oponente  adelante}
                      trans(Ataque frontal, Retroceder) : {∃ Linea blanca detectada}"))
 
+(comment
+ (cg/generate-code BDRML)
+ ,,)
+
 (def empty-body (ast/block-node []))
 
 (deftest behaviors-are-mapped-to-stopped-tasks
