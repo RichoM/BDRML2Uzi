@@ -3,10 +3,12 @@
 (declare equivalent?)
 
 (defn- equivalent-sequential? [a b]
-  (when (sequential? b)
-    (every? (fn [[i v]]
-              (equivalent? v (nth b i)))
-            (map-indexed (fn [i e] [i e]) a))))
+  (try
+    (when (sequential? b)
+      (every? (fn [[i v]]
+                (equivalent? v (nth b i)))
+              (map-indexed (fn [i e] [i e]) a)))
+    (catch js/Object _ false)))
 
 (defn- equivalent-map? [a b]
   (when (associative? b)
