@@ -5,8 +5,9 @@
     <title></title>
   </head>
   <body>
-    <div>
-      <textarea rows="20" cols="70" id="input">
+    <div style="float:left">
+      <div>
+        <textarea rows="20" cols="70" id="input">
 B = {Buscar, Retroceder, Ataque frontal}
 De = {Oponente  adelante: bool, Linea blanca detectada: bool}
 trans(Buscar, Retroceder) : {∃ Linea blanca detectada}
@@ -14,13 +15,15 @@ trans(Retroceder, Buscar) : {Tr elapsed}
 trans(Buscar, Ataque frontal) : {∃ Oponente  adelante}
 trans(Ataque frontal, Buscar) : {∄ Oponente  adelante}
 trans(Ataque frontal, Retroceder) : {∃ Linea blanca detectada}
-      </textarea>
-    </div>
-    <div>
-      <button type="button" id="parse-button">Parse</button>
+        </textarea>
+      </div>
+      <div>
+        <button type="button" id="parse-button">Parse</button>
+        <button type="button" id="codegen-button">Generate code</button>
+      </div>
     </div>
 
-    <pre id="output"></pre>
+    <pre id="output" style="float: left; margin-left: 20px;"></pre>
 
     <script src="js/main.js"></script>
     <script type="text/javascript">
@@ -30,6 +33,18 @@ trans(Ataque frontal, Retroceder) : {∃ Linea blanca detectada}
         let output = bdrml2uzi.core.parse(value);
         console.log(output);
         document.querySelector("#output").innerText = JSON.stringify(output, null, 2);
+      } catch (err) {
+        document.querySelector("#output").innerText = err.toString();
+        console.error(err);
+      }
+    }
+
+    document.querySelector("#codegen-button").onclick = function () {
+      try {
+        let value = document.querySelector("#input").value;
+        let output = bdrml2uzi.core.codegen(value);
+        console.log(output);
+        document.querySelector("#output").innerText = output;
       } catch (err) {
         document.querySelector("#output").innerText = err.toString();
         console.error(err);
