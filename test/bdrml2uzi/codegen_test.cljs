@@ -14,15 +14,25 @@
                      trans(Ataque frontal, Buscar) : {∄ Oponente  adelante}
                      trans(Ataque frontal, Retroceder) : {∃ Linea blanca detectada}"))
 
+(def empty-body (ast/block-node []))
+
 (deftest behaviors-are-mapped-to-stopped-tasks
   (is (equivalent? (ast/program-node
                     :scripts #{(ast/task-node :name "buscar"
-                                              :body (ast/block-node [])
+                                              :body empty-body
                                               :state "stopped")
                                (ast/task-node :name "retroceder"
-                                              :body (ast/block-node [])
+                                              :body empty-body
                                               :state "stopped")
                                (ast/task-node :name "ataque_frontal"
-                                              :body (ast/block-node [])
+                                              :body empty-body
                                               :state "stopped")})
+                   (cg/generate-code BDRML))))
+
+(deftest external-data-are-mapped-to-functions
+  (is (equivalent? (ast/program-node
+                    :scripts #{(ast/function-node :name "oponente__adelante"
+                                                  :body empty-body)
+                               (ast/function-node :name "linea_blanca_detectada"
+                                                  :body empty-body)})
                    (cg/generate-code BDRML))))
